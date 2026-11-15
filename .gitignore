@@ -1,0 +1,17 @@
+# Local configuration and secrets
+.env
+*.secret
+*.local
+
+# Go build/test artifacts
+bin/
+dist/
+coverage.out
+*.test
+
+# IDE and OS files
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db

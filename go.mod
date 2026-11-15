@@ -2,17 +2,19 @@ module github.com/marco-scarnato/multiservices-backend/services/project-d-ckgues
 
 go 1.23.0
 
-require github.com/marco-scarnato/multiservices-backend/libs/platform v0.0.0
+require (
+	github.com/jackc/pgx/v5 v5.7.2
+	github.com/marco-scarnato/multiservices-backend/libs/platform v0.0.0
+	github.com/nats-io/nats.go v1.39.1
+)
 
 require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/pgx/v5 v5.7.2 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
-	github.com/nats-io/nats.go v1.39.1 // indirect
 	github.com/nats-io/nkeys v0.4.9 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect

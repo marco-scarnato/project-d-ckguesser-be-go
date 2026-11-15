@@ -17,6 +17,9 @@ import (
 	"github.com/marco-scarnato/multiservices-backend/libs/platform/mongo"
 	"github.com/marco-scarnato/multiservices-backend/libs/platform/postgres"
 	serviceconfig "github.com/marco-scarnato/multiservices-backend/services/project-d-ckguesser-be-go/internal/config"
+	"github.com/marco-scarnato/multiservices-backend/services/project-d-ckguesser-be-go/internal/handlers"
+	"github.com/marco-scarnato/multiservices-backend/services/project-d-ckguesser-be-go/internal/repository"
+	natsgo "github.com/nats-io/nats.go"
 )
 
 func main() {
@@ -94,7 +97,7 @@ func run() error {
 	healthServer := health.NewWithCheckers(natsClient.Ready, dbCheckers)
 
 	// Standardized NATS health responder
-	subs, err := health.RegisterNATSHealthResponder(
+	healthSubs, err := health.RegisterNATSHealthResponder(
 		natsClient.Conn(),
 		logger,
 		cfg.ServiceName,
@@ -104,8 +107,32 @@ func run() error {
 	)
 	if err != nil {
 		_ = natsClient.Close(context.Background())
-		return fmt.Errorf("subscribe to NATS: %w", err)
+		return fmt.Errorf("subscribe to NATS health: %w", err)
 	}
+
+	var catalogSubs []*natsgo.Subscription
+	if pgClient != nil {
+		catalogStore := repository.NewPostgresCatalogStore(pgClient.Pool())
+		catalogSubs, err = handlers.RegisterCatalogHandlers(
+			natsClient.Conn(),
+			logger,
+			catalogStore,
+			cfg.DBOperationTimeout,
+		)
+		if err != nil {
+			for _, sub := range healthSubs {
+				if sub != nil {
+					_ = sub.Drain()
+				}
+			}
+			_ = natsClient.Close(context.Background())
+			return fmt.Errorf("subscribe to NATS catalog: %w", err)
+		}
+	} else {
+		logger.Warn("PostgreSQL disabled; catalog NATS handlers not registered")
+	}
+
+	subs := append(healthSubs, catalogSubs...)
 	defer func() {
 		for _, sub := range subs {
 			if sub != nil {
